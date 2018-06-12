@@ -6,7 +6,7 @@
 #
 # v 0.1
 """
-<plugin key="AirHumidifier" name="AirHumidifier" author="mgrom" version="0.1.1" wikilink="https://github.com/rytilahti/python-miio" externallink="https://github.com/kofec/domoticz-AirPurifier">
+<plugin key="AirHumidifier" name="AirHumidifier" author="mgrom" version="0.1.1" wikilink="https://github.com/rytilahti/python-miio" externallink="https://github.com/mgrom/domoticz-AirHumidifier">
     <params>
 		<param field="Address" label="IP Address" width="200px" required="true" default="127.0.0.1"/>
 		<param field="Mode1" label="AirHumidifier Token" default="" width="400px" required="true"  />
