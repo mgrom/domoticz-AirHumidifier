@@ -1,0 +1,123 @@
+rules:
+  - id: obfuscated-string-fromcharcode
+    patterns:
+      - pattern-regex: "String\\.fromCharCode\\("
+    message: >
+      String.fromCharCode() detected - commonly used in obfuscated payloads
+      to hide malicious strings. Verify this is intentional.
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: obfuscated-hex-escape-sequences
+    patterns:
+      - pattern-regex: "(\\\\x[0-9a-fA-F]{2}){3,}"
+    message: >
+      Multiple hex escape sequences detected - common obfuscation pattern.
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: obfuscated-global-variable-injection
+    patterns:
+      - pattern-regex: "global\\[.*\\]\\s*=\\s*(require|module)"
+    message: >
+      Dynamic global variable assignment with require/module detected.
+      This is a common backdoor pattern to hide module access.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: obfuscated-function-constructor
+    patterns:
+      - pattern: $F($X, $Y)($Z)
+      - metavariable-pattern:
+          metavariable: $F
+          pattern-regex: "^(Function|new Function)$"
+    message: >
+      Indirect Function constructor call detected - equivalent to eval().
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: obfuscated-variable-names
+    patterns:
+      - pattern-regex: "_\\$_[0-9a-f]{4,}"
+    message: >
+      Obfuscated variable name pattern (_$_hex) detected - typical of
+      JS obfuscators used to hide malicious code.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: obfuscated-split-join-decode
+    patterns:
+      - pattern-regex: "\\.split\\([^)]+\\)\\.join\\([^)]+\\)\\.split\\([^)]+\\)\\.join\\("
+    message: >
+      Chained split/join operations detected - common string deobfuscation pattern.
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: eval-dynamic-code
+    patterns:
+      - pattern: eval($X)
+    message: >
+      eval() with dynamic argument detected.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: postcss-config-code-injection
+    patterns:
+      - pattern-regex: "createRequire\\(import\\.meta\\.url\\)"
+    paths:
+      include:
+        - "postcss.config.*"
+    message: >
+      createRequire in PostCSS config is unusual and may indicate injected code.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: suspicious-long-oneliner
+    patterns:
+      - pattern-regex: "^.{2000,}$"
+    paths:
+      include:
+        - "*.js"
+        - "*.ts"
+        - "*.mjs"
+        - "*.cjs"
+      exclude:
+        - "node_modules/**"
+        - "dist/**"
+        - "build/**"
+        - "*.min.js"
+        - "*.min.cjs"
+        - "*.bundle.js"
+        - "pnpm-lock.yaml"
+        - "package-lock.json"
+    message: >
+      Extremely long single line in source file - may indicate appended
+      obfuscated payload (backdoor pattern: pad with spaces then inject).
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: suspicious-trailing-whitespace
+    patterns:
+      - pattern-regex: "\\S[ \\t]{50,}\\S"
+    paths:
+      include:
+        - "*.js"
+        - "*.ts"
+        - "*.mjs"
+        - "*.cjs"
+        - "*.tsx"
+        - "*.jsx"
+    message: >
+      Excessive whitespace padding detected between code segments.
+      This is a known technique to hide appended malicious code after
+      what appears to be the end of a file.
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: base64-decode-execute
+    patterns:
+      - pattern-regex: "(atob|Buffer\\.from)\\([^)]+\\).*\\b(eval|Function|require)\\b"
+    message: >
+      Base64 decode combined with code execution detected.
+    languages: [javascript, typescript]
+    severity: ERROR
