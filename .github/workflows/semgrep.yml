@@ -1,0 +1,57 @@
+name: semgrep-obfuscation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: Skan obfuskacji
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalacja semgrep
+        run: pip install --quiet semgrep
+
+      - name: Skan regulami z .semgrep/
+        run: |
+          if [ ! -d .semgrep ]; then
+            echo "::error::Brak katalogu .semgrep/ — regul detekcyjnych nie ma w repo."
+            exit 1
+          fi
+          semgrep scan \
+            --config .semgrep/ \
+            --error \
+            --severity ERROR \
+            --metrics off \
+            --disable-version-check \
+            --exclude node_modules \
+            --exclude .git \
+            --sarif --output semgrep.sarif \
+            . || SCAN_FAILED=1
+          semgrep scan \
+            --config .semgrep/ \
+            --metrics off \
+            --disable-version-check \
+            --exclude node_modules \
+            --exclude .git \
+            . || true
+          exit ${SCAN_FAILED:-0}
+
+      - name: Zachowaj raport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          if-no-files-found: ignore
